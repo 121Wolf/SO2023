@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 
 #define PIPE_NAME "my_pipe"
-//bom
+
 int main() {
     int fd;
     char *message = "Hello, server!";
