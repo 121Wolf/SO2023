@@ -12,6 +12,8 @@ int main() {
     size_t fdfifo, fd_log;
     char buffer[256];
     int bytes_read;
+    int bytes_wrote;
+    char *message = "mete isto";;
 
    // buffer = (char *) malloc(256);
     // create named pipe
@@ -19,7 +21,7 @@ int main() {
         perror("MKFIFO");
     }
     //open log.txt
-    if ((fd_log = open("log.txt", O_CREAT | O_TRUNC | O_WRONLY, 0666)) == -1) {
+    if ((fd_log = open("log.txt",  O_CREAT | O_TRUNC | O_WRONLY, 0666)) == -1) {
         perror("Open log.txt");
         return -1;
     }
@@ -35,20 +37,22 @@ int main() {
     printf("[DEBUG] Server listening... fdfifo %ld \n",fdfifo);
 
     // read from pipe and print to console
+    size_t readen = 0;
     while ((bytes_read = read(fdfifo, buffer, sizeof(buffer))) > 0) {
-        printf("Received: %s\n", buffer);
+        readen += bytes_read;
+        printf("Received: %s\n and %lu", buffer, readen);
     }
         //write to log file the buffer message to save the command and arguments
-        write(fd_log,buffer,bytes_read);
-        write(fd_log, "\n", 1);
+       if ((bytes_wrote = write(fd_log,buffer,readen)) == -1) {
         printf("[DEBUG] wrote %s to file\n", buffer);
+    } 
+    
     // close the pipe
     close(fdfifo);
     printf("Pipe closed \n");
     close(fd_log);
 
     // remove the named pipe
-    unlink(PIPE_NAME);
 
     return 0;
 }

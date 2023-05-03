@@ -10,7 +10,7 @@
 
 int main() {
     int fd;
-    char *message = "Hello, server!";
+    char *message = "Hello, server!\n";
     int bytes_written;
     char *command = "ls";
 
@@ -21,7 +21,7 @@ int main() {
    //execl("/bin/ls", command, NULL);
 
     // write message to pipe
-    bytes_written = write(fd, message, strlen(message) + 1);
+    bytes_written = write(fd, message, strlen(message) );
 
     printf("Sent %d bytes to server\n", bytes_written);
 
