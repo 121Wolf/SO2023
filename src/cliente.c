@@ -14,7 +14,7 @@ int main() {
     int fd;
     char *message = "Hello, server!\n";
     int bytes_written;
-    //char *command = "ls";
+    char *command = "ls";
 
 
     // open pipe for writing
@@ -22,6 +22,16 @@ int main() {
     if(fd == -1) printf("pila");
 
    //execl("/bin/ls", command, NULL);
+
+   // Guardar o pid do filho
+    pid_t pid=fork();
+    switch(pid) {
+        case 0:
+            execl("/bin/ls",command,NULL);
+            _exit(0);
+        default:
+            printf("Fork successful %d",pid);
+    }
 
     // write message to pipe
     bytes_written = write(fd, message, strlen(message) );
