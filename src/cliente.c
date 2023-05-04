@@ -5,6 +5,8 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
+#include <sys/time.h>
 #include "assist.h"
 
 
@@ -15,6 +17,7 @@ int main() {
     char *message = "Hello, server!\n";
     int bytes_written;
     char *command = "ls";
+    //int status = 0;
 
 
     // open pipe for writing
@@ -22,15 +25,16 @@ int main() {
     if(fd == -1) printf("pila");
 
    //execl("/bin/ls", command, NULL);
-
-   // Guardar o pid do filho
-    pid_t pid=fork();
-    switch(pid) {
-        case 0:
-            execl("/bin/ls",command,NULL);
-            _exit(0);
-        default:
-            printf("Fork successful %d",pid);
+    for (int i = 0; i < 5; i++) {
+        // Guardar o pid do filho
+        pid_t pid=fork();
+        switch(pid) {
+            case 0:
+                execl("/bin/ls",command,NULL);
+                _exit(0);
+            default:
+                printf("Fork successful %d\n",pid);
+        }
     }
 
     // write message to pipe
