@@ -28,6 +28,7 @@ int main() {
         return -1;
     }
 
+
     // open pipe for reading
     if((fdfifo = open(PIPE_NAME, O_RDONLY, 0666)) == -1){
         perror("Open fifo");
@@ -35,26 +36,33 @@ int main() {
     else 
         printf("[DEBUG] opened FIFO for reading\n");
     //puts all values of buffer to \0
-    bzero(buffer, 256);
-    printf("[DEBUG] Server listening... fdfifo %ld \n",fdfifo);
+        bzero(buffer, 256);
+        printf("[DEBUG] Server listening... fdfifo %lu \n",fdfifo);
 
-    // read from pipe and print to console
-    size_t readen = 0;
-    while ((bytes_read = read(fdfifo, buffer, sizeof(buffer))) > 0) {
-        readen += bytes_read;
-        printf("Received: %s\n and %lu", buffer, readen);
-    }
+    
+     // read from pipe and print to console
+        size_t readen = 0;
+        while ((bytes_read = read(fdfifo, buffer, sizeof(buffer))) > 0) {
+            readen += bytes_read;
+            printf("Received: %s and  read %lu bytes", buffer, readen);
+        }
+        int pid=0;
+        for (int i = 0;i < readen; i++) {
+            pid = pid*10;
+            pid+=buffer[i]-'0';
+        }
+
+        printf("Este é o PID do filho: %d\n", pid);
+
         //write to log file the buffer message to save the command and arguments
-       if ((bytes_wrote = write(fd_log,buffer,readen)) == -1) {
-        printf("[DEBUG] wrote %s to file\n", buffer);
-    } 
+        //if ((bytes_wrote = write(fd_log,buffer,readen)) == -1) {
+        //    printf("[DEBUG] wrote %s to file\n", buffer);
+    
     
     // close the pipe
     close(fdfifo);
     printf("Pipe closed \n");
     close(fd_log);
-
-    // remove the named pipe
 
     return 0;
 }
