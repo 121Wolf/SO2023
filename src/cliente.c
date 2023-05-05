@@ -12,10 +12,13 @@
 
 #define PIPE_NAME "my_pipe"
 
+
+
 int main() {
-    int fd;
+    int fd; // the file descripter of my_pipe 
     char message[256];
-    char userinput[256];
+    char userinput[256]; // user inputs on the terminal
+    pid_t pid_status[10]; // here we put the pids of child that have not finished yet
     //char *endmessage = "Coisas aconteceram bro";
     int bytes_written;
     int bytesread;
@@ -30,7 +33,6 @@ int main() {
         if((bytesread = read(STDIN_FILENO,userinput,sizeof(userinput))) == -1){
           perror("Userinput:");
         }
-        //commandparser(userinput,bytesread);
     else{
         while(1){
             if((bytesread = read(STDIN_FILENO,userinput,sizeof(userinput))) == -1){
@@ -40,15 +42,40 @@ int main() {
         }
     }
 
+
+
+
     //execl("/bin/ls", command, NULL);
     for (int i = 0; i < 5; i++) {
         // Guardar o pid do filho
         pid_t pid=fork();
         switch(pid) {
-            case 0:
+            case 0: 
+                struct timeval start, end, diff;
+                gettimeofday(&start,NULL);
+                printf("[DEBUG] The seconds %ld and the microseconds %ld",start.tv_sec,start.tv_usec);
                 execl("/bin/ls",command,NULL);
+                gettimeofday(&end,NULL);
+                //calculates the diffrence between the start and the end
+                diff.tv_sec = end.tv_sec - start.tv_sec;
+                diff.tv_usec = end.tv_usec - start.tv_usec;
+                    //normalizes the diffrence
+                     if (diff.tv_usec < 0) {
+                        diff.tv_sec--;
+                         diff.tv_usec += 1000000;
+                             }
+                printf("[DEBUG] The seconds %ld and the microseconds %ld",diff.tv_sec,diff.tv_usec);
                 _exit(0);
             default:
+            //writes the pid in the array of unfinished child pids, to be used for status
+                int counter = 0;
+                for(int i = 0;i<10;i++){
+                    if(pid_status != 0){
+                        counter ++;
+                    }
+                    pid_status[counter++] = pid;
+
+                }
                 printf("Fork successful %d\n",pid);
                 wait(&status);
         }
