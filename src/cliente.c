@@ -33,28 +33,28 @@ int main() {
         if((bytesread = read(STDIN_FILENO,userinput,sizeof(userinput))) == -1){
           perror("Userinput:");
         }
-    else{
-        while(1){
+/*   else{
+      //  while(1){
             if((bytesread = read(STDIN_FILENO,userinput,sizeof(userinput))) == -1){
                 perror("Userinput:");
             }
             //commandparser(userinput,bytesread);
-        }
-    }
+      //  }
+    }*/
 
 
-
-
-    //execl("/bin/ls", command, NULL);
     for (int i = 0; i < 5; i++) {
         // Guardar o pid do filho
         pid_t pid=fork();
         switch(pid) {
             case 0: 
+                char *alive = "I AM ALIVE";
+                write(STDOUT_FILENO,alive,sizeof(alive));
+                printf("I AM ALIVE");
                 struct timeval start, end, diff;
                 gettimeofday(&start,NULL);
                 printf("[DEBUG] The seconds %ld and the microseconds %ld",start.tv_sec,start.tv_usec);
-                execl("/bin/ls",command,NULL);
+                execl("/bin/ls",command,NULL);     
                 gettimeofday(&end,NULL);
                 //calculates the diffrence between the start and the end
                 diff.tv_sec = end.tv_sec - start.tv_sec;
