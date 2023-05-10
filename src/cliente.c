@@ -12,51 +12,82 @@
 
 #define PIPE_NAME "my_pipe"
 
-
+int parserinput(char * userinput){
+    return 1;
+}
 
 int main() {
     int fd; // the file descripter of my_pipe 
-    char message[256];
     char userinput[256]; // user inputs on the terminal
     pid_t pid_status[10]; // here we put the pids of child that have not finished yet
-    //char *endmessage = "Coisas aconteceram bro";
     int bytes_written;
     int bytesread;
+    int counter = 0; //counts the number of active processes in pid_status
     char *command = "ls";
     int status = 0;
+    int parser = 0;
 
 
-     // open pipe for writing
-    if((fd = open(PIPE_NAME, O_WRONLY)) == -1){
-        perror("FIFO");
-    }
-        if((bytesread = read(STDIN_FILENO,userinput,sizeof(userinput))) == -1){
-          perror("Userinput:");
-        }
-/*   else{
-      //  while(1){
+         while(1){
+            printf("[DEBUG] Insert command: \n");
             if((bytesread = read(STDIN_FILENO,userinput,sizeof(userinput))) == -1){
                 perror("Userinput:");
             }
-            //commandparser(userinput,bytesread);
-      //  }
-    }*/
+            //passes the input
+             parser = parserinput(userinput);
+             pid_t pidcontrol=fork();
+            
+                //the child process shall process the input command and the parent shall wait for more user inputs
+            if(pidcontrol == 0){
 
+                 switch (parser)
+             {
+             case 0:
+                printf("[DEBUG] This input cannot be processed, try again");
+                break;
 
-    for (int i = 0; i < 5; i++) {
-        // Guardar o pid do filho
-        pid_t pid=fork();
-        switch(pid) {
-            case 0: 
-                char *alive = "I AM ALIVE";
-                write(STDOUT_FILENO,alive,sizeof(alive));
-                printf("I AM ALIVE");
-                struct timeval start, end, diff;
+             case 1: //execute -u 
+
+                struct timeval start,end,diff;
+                 printf("[DEBUG] This executes the execl function \n");
+                 if((fd = open(PIPE_NAME, O_WRONLY)) == -1){
+                         perror("FIFO");
+                }
+                if((bytes_written = write(fd, &userinput,sizeof(start))) == -1){
+                         perror("FIFO Write:");
+                }
                 gettimeofday(&start,NULL);
-                printf("[DEBUG] The seconds %ld and the microseconds %ld",start.tv_sec,start.tv_usec);
-                execl("/bin/ls",command,NULL);     
+                if((bytes_written = write(fd, &start,sizeof(start))) == -1){
+                         perror("FIFO Write:");
+                }
+                     pid_t pid=fork();
+                        switch(pid) {
+                        case 0: 
+                            printf("[DEBUG] I AM ALIVE \n");
+                            execl("/bin/ls",command,NULL);
+                            _exit(0);
+                         default:
+                //writes the pid in the array of unfinished child pids, to be used for status
+                /* counter = 0;                   
+                for(int i = 0;i<10;i++){
+                    if(pid_status != 0){
+                        counter ++;
+                    }
+                    pid_status[counter++] = pid;
+                    }*/
+               printf("[DEBUG] Este é o pid do processo filho %d \n",pid);
+               // printf("[DEBUG] The seconds %ld and the microseconds %ld \n",start.tv_sec,start.tv_usec);
+                pid_status[counter]= pid;
+                counter++;
+                printf("Fork successful %d\n with counter %d \n",pid,counter);
+                for(int i=0;i < counter;i++){
+                    printf("The child  %d \n",pid_status[i]);
+                }
+                wait(&status);
                 gettimeofday(&end,NULL);
-                //calculates the diffrence between the start and the end
+                if((bytes_written = write(fd, &end,sizeof(start))) == -1){
+                         perror("FIFO Write:");
+        }
                 diff.tv_sec = end.tv_sec - start.tv_sec;
                 diff.tv_usec = end.tv_usec - start.tv_usec;
                     //normalizes the diffrence
@@ -64,22 +95,32 @@ int main() {
                         diff.tv_sec--;
                          diff.tv_usec += 1000000;
                              }
-                printf("[DEBUG] The seconds %ld and the microseconds %ld",diff.tv_sec,diff.tv_usec);
-                _exit(0);
-            default:
-            //writes the pid in the array of unfinished child pids, to be used for status
-                int counter = 0;
-                for(int i = 0;i<10;i++){
-                    if(pid_status != 0){
-                        counter ++;
-                    }
-                    pid_status[counter++] = pid;
+                printf("[DEBUG] The seconds %ld and the microseconds %ld \n",diff.tv_sec,diff.tv_usec);    
+                break;    
+                 }
 
-                }
-                printf("Fork successful %d\n",pid);
-                wait(&status);
-        }
+             case 2:
+
+
+              printf("[DEBUG] This returns the status");
+              //code here
+                break;
+             }
+
+    printf("[DEBUG] Sent %d bytes to server\n", bytes_written);
+     //waits for child PID _exit(0)
+    //pid_t terminated_pid = wait(&status);
+
+    // close the pipe 
+     close(fd);
+     return 0;
+}
+            
     }
+}
+
+   
+    //}
         // int to string, to be confirmed 
    /* long j;
     for (j = 1; j < pid ;j = j * 10);
@@ -93,23 +134,3 @@ int main() {
     
     message[i] = 0;
 */
-    // write message to pipe
-    if((bytes_written = write(fd, message, strlen(message))) == -1){
-        perror("FIFO Write:");
-    }
-    
-    printf("[DEBUG] Sent %d bytes to server\n", bytes_written);
-    
-    //waits for child PID _exit(0)
-    //pid_t terminated_pid = wait(&status);
-    
-    /*if(bytes_written2 = write(fd,endmessage,strlen(endmessage)) == -1){
-        perror("A comunicação falhou devido:");
-    }
-    printf("[DEBUG] Sent %d bytes to server\n", bytes_written2);*/
-
-    // close the pipe 
-    close(fd);
-
-    return 0;
-}

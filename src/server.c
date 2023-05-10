@@ -44,7 +44,7 @@ int main() {
         size_t readen = 0;
         while ((bytes_read = read(fdfifo, buffer, sizeof(buffer))) > 0) {
             readen += bytes_read;
-            printf("Received: %s and  read %lu bytes", buffer, readen);
+            printf("Received: %s and  read %lu bytes \n", buffer, readen);
         }
         int pid=0;
         for (int i = 0;i < readen; i++) {
