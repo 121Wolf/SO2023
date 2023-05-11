@@ -21,14 +21,17 @@ SERVER_EXECUTABLE = $(BIN_DIR)/server
 all: $(CLIENTE_EXECUTABLE) $(SERVER_EXECUTABLE)
 
 # Link object files into the executables
-$(CLIENTE_EXECUTABLE): $(CLIENTE_OBJ_FILES)
+$(CLIENTE_EXECUTABLE): $(CLIENTE_OBJ_FILES) $(OBJ_DIR)/assist.o
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(SERVER_EXECUTABLE): $(SERVER_OBJ_FILES)
+$(SERVER_EXECUTABLE): $(SERVER_OBJ_FILES) $(OBJ_DIR)/assist.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 # Compile source files into object files
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(SRC_DIR)/assist.h $(SRC_DIR)/assist.c
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/assist.o: $(SRC_DIR)/assist.c src/assist.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean up object and executable files

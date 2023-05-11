@@ -14,7 +14,7 @@ int main() {
     size_t fdfifo, fd_log;
     char buffer[256];
     int bytes_read;
-    int bytes_wrote;
+  //  int bytes_wrote;
     //char *message = "mete isto";
 
    // buffer = (char *) malloc(256);

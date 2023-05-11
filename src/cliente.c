@@ -7,10 +7,14 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <signal.h>
 #include "assist.h"
 
 
 #define PIPE_NAME "my_pipe"
+
+struct Node pid_status;// here we put the pids of child that have not finished yet
+struct Node *head = NULL;
 
 int parserinput(char * userinput){
     return 1;
@@ -19,26 +23,48 @@ int parserinput(char * userinput){
 int main() {
     int fd; // the file descripter of my_pipe 
     char userinput[256]; // user inputs on the terminal
-    pid_t pid_status[10]; // here we put the pids of child that have not finished yet
-    pid_t pid_worker;
+    pid_t pid_worker[1];
     int bytes_written;
     int bytesread;
-    int counter = 0; //counts the number of active processes in pid_status
+    //int counter = 0; //counts the number of active processes in pid_status
     char *command = "ls";
     int pipefd[2];
     int status = 0;
     int parser = 0;
 
+    //create pipe
     if (pipe(pipefd) == -1) {
         perror("pipe");
         exit(1);
     }
+     pid_t processes = fork();
+     if(processes == 0){
+        printf("[DEBUG] TEST1 \n");
+        close(pipefd[1]); //close write end
+        printf("[DEBUG] TEST2 \n");
+        while(1){
+                if (read(pipefd[0], pid_worker, sizeof(pid_t)) == -1) {
+                        perror("read");
+                        }
+                    printf("[DEBUG] PID RECEBIDO %d \n",pid_worker[0]);
+                 //   checkList(head,pid_worker[0]);
+                
+            }
+     }
+
+    else{
+
          while(1){
             printf("[DEBUG] Insert command: \n");
             if((bytesread = read(STDIN_FILENO,userinput,sizeof(userinput))) == -1){
                 perror("Userinput:");
             }
-            //passes the input
+
+            else{
+
+            }
+
+             //passes the input  
              parser = parserinput(userinput);
              pid_t pidcontrol=fork();
             
@@ -65,13 +91,15 @@ int main() {
                 if((bytes_written = write(fd, &start,sizeof(start))) == -1){
                          perror("FIFO Write:");
                 }
+                 printf("[DEBUG] This reaches the execl function \n");
                      pid_t pid=fork();
                         switch(pid) {
                         case 0: 
                             printf("[DEBUG] I AM ALIVE \n");
                             close(pipefd[0]);
-                             pid_t my_pid = getpid();
-                             if (write(pipefd[1], &my_pid, sizeof(pid_t)) == -1) {
+                             pid_worker[0] = getpid();
+                             // this will write the pid to his grandparent to be added to list of active processes
+                             if (write(pipefd[1], pid_worker, sizeof(pid_t)) == -1) {
                                      perror("cannot write to father");
                                          exit(1);
                              }
@@ -87,9 +115,16 @@ int main() {
                     }
                     pid_status[counter++] = pid;
                     }*/
-               printf("[DEBUG] Este é o pid do processo filho %d \n",pid);
-               // printf("[DEBUG] The seconds %ld and the microseconds %ld \n",start.tv_sec,start.tv_usec);
+                printf("[DEBUG] Este é o pid do processo filho %d \n",pid);
+                printf("[DEBUG] Este é o pid do processo pai %d \n",getpid());
+                pid_worker[0] = pid;
                 wait(&status);
+                close(pipefd[0]);
+                if (write(pipefd[1], pid_worker, sizeof(pid_t)) == -1) {
+                         perror("cannot write to father");
+                         exit(1);
+                             }
+                close(pipefd[1]);
                 gettimeofday(&end,NULL);
                 if((bytes_written = write(fd, &end,sizeof(start))) == -1){
                          perror("FIFO Write:");
@@ -101,14 +136,13 @@ int main() {
                         diff.tv_sec--;
                          diff.tv_usec += 1000000;
                              }
-                printf("[DEBUG] The seconds %ld and the microseconds %ld \n",diff.tv_sec,diff.tv_usec);    
-                break;    
+                printf("[DEBUG] The seconds %ld and the microseconds %ld \n",diff.tv_sec,diff.tv_usec);       
+                 break;
                  }
+                 break;
 
              case 2:
-
-
-              printf("[DEBUG] This returns the status");
+                 printf("[DEBUG] This returns the status \n");
               //code here
                 break;
              
@@ -122,19 +156,19 @@ int main() {
     //pid_t terminated_pid = wait(&status);
             }
     else {
-        close(pipefd[1]);
+   /*     close(pipefd[1]); //close write end
         if (read(pipefd[0], &pid_worker, sizeof(pid_t)) == -1) {
             perror("read");
             exit(1);
         }
+        insertAtBeginning(&head, pid_worker); //this adds pid of child to linked list of processes that have yet not ended
         printf("Child PID received: %d\n", pid_worker);
         close(pipefd[0]);
-         pid_status[counter]= pid_worker;
-                counter++;
-                printf("Fork successful %d\n with counter %d \n",pid_worker,counter);
-                for(int i=0;i < counter;i++){
-                    printf("The child  %d \n",pid_status[i]);
-                }
+        */
+                printf("Fork successful \n");
+              //  for(int i=0;i < counter;i++){
+              //      printf("The child  %d \n",pid_status[i]);
+              //  }
         
 
 
@@ -145,7 +179,7 @@ int main() {
      close(fd);
      return 0;
 
-            
+            }         
     
 }
 
