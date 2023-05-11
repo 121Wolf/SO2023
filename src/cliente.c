@@ -20,14 +20,19 @@ int main() {
     int fd; // the file descripter of my_pipe 
     char userinput[256]; // user inputs on the terminal
     pid_t pid_status[10]; // here we put the pids of child that have not finished yet
+    pid_t pid_worker;
     int bytes_written;
     int bytesread;
     int counter = 0; //counts the number of active processes in pid_status
     char *command = "ls";
+    int pipefd[2];
     int status = 0;
     int parser = 0;
 
-
+    if (pipe(pipefd) == -1) {
+        perror("pipe");
+        exit(1);
+    }
          while(1){
             printf("[DEBUG] Insert command: \n");
             if((bytesread = read(STDIN_FILENO,userinput,sizeof(userinput))) == -1){
@@ -64,7 +69,14 @@ int main() {
                         switch(pid) {
                         case 0: 
                             printf("[DEBUG] I AM ALIVE \n");
-                            execl("/bin/ls",command,NULL);
+                            close(pipefd[0]);
+                             pid_t my_pid = getpid();
+                             if (write(pipefd[1], &my_pid, sizeof(pid_t)) == -1) {
+                                     perror("cannot write to father");
+                                         exit(1);
+                             }
+                             close(pipefd[1]);
+                             execl("/bin/ls",command,NULL);
                             _exit(0);
                          default:
                 //writes the pid in the array of unfinished child pids, to be used for status
@@ -77,12 +89,6 @@ int main() {
                     }*/
                printf("[DEBUG] Este é o pid do processo filho %d \n",pid);
                // printf("[DEBUG] The seconds %ld and the microseconds %ld \n",start.tv_sec,start.tv_usec);
-                pid_status[counter]= pid;
-                counter++;
-                printf("Fork successful %d\n with counter %d \n",pid,counter);
-                for(int i=0;i < counter;i++){
-                    printf("The child  %d \n",pid_status[i]);
-                }
                 wait(&status);
                 gettimeofday(&end,NULL);
                 if((bytes_written = write(fd, &end,sizeof(start))) == -1){
@@ -105,18 +111,42 @@ int main() {
               printf("[DEBUG] This returns the status");
               //code here
                 break;
+             
+            
+            case 3:
+            printf("[DEBUG] This quits the program");
+            break;
              }
-
     printf("[DEBUG] Sent %d bytes to server\n", bytes_written);
      //waits for child PID _exit(0)
     //pid_t terminated_pid = wait(&status);
+            }
+    else {
+        close(pipefd[1]);
+        if (read(pipefd[0], &pid_worker, sizeof(pid_t)) == -1) {
+            perror("read");
+            exit(1);
+        }
+        printf("Child PID received: %d\n", pid_worker);
+        close(pipefd[0]);
+         pid_status[counter]= pid_worker;
+                counter++;
+                printf("Fork successful %d\n with counter %d \n",pid_worker,counter);
+                for(int i=0;i < counter;i++){
+                    printf("The child  %d \n",pid_status[i]);
+                }
+        
 
+
+    }
+
+         }
     // close the pipe 
      close(fd);
      return 0;
-}
+
             
-    }
+    
 }
 
    
