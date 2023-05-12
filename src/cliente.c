@@ -23,12 +23,12 @@ int parserinput(char * userinput){
 int main() {
     int fd; // the file descripter of my_pipe 
     char userinput[256]; // user inputs on the terminal
-    pid_t pid_worker[1];
+    pid_t pid_worker[1]; //buffer that hold the pid of a process 
     int bytes_written;
     int bytesread;
     //int counter = 0; //counts the number of active processes in pid_status
     char *command = "ls";
-    int pipefd[2];
+    int pipefd[2]; // file descriptors of a pipe that reads from processes and is written by other childs
     int status = 0;
     int parser = 0;
 
