@@ -39,15 +39,14 @@ int main() {
     }
      pid_t processes = fork();
      if(processes == 0){
-        printf("[DEBUG] TEST1 \n");
         close(pipefd[1]); //close write end
-        printf("[DEBUG] TEST2 \n");
         while(1){
                 if (read(pipefd[0], pid_worker, sizeof(pid_t)) == -1) {
                         perror("read");
                         }
                     printf("[DEBUG] PID RECEBIDO %d \n",pid_worker[0]);
-                 //   checkList(head,pid_worker[0]);
+                   checkList(head,pid_worker[0]);
+                   printf("[DEBUG] ");
                 
             }
      }
@@ -59,14 +58,9 @@ int main() {
             if((bytesread = read(STDIN_FILENO,userinput,sizeof(userinput))) == -1){
                 perror("Userinput:");
             }
-
-            else{
-
-            }
-
-             //passes the input  
-             parser = parserinput(userinput);
-             pid_t pidcontrol=fork();
+            //passes the input 
+            parser = parserinput(userinput);
+            pid_t pidcontrol=fork();
             
                 //the child process shall process the input command and the parent shall wait for more user inputs
             if(pidcontrol == 0){
@@ -91,7 +85,6 @@ int main() {
                 if((bytes_written = write(fd, &start,sizeof(start))) == -1){
                          perror("FIFO Write:");
                 }
-                 printf("[DEBUG] This reaches the execl function \n");
                      pid_t pid=fork();
                         switch(pid) {
                         case 0: 
@@ -156,22 +149,11 @@ int main() {
     //pid_t terminated_pid = wait(&status);
             }
     else {
-   /*     close(pipefd[1]); //close write end
-        if (read(pipefd[0], &pid_worker, sizeof(pid_t)) == -1) {
-            perror("read");
-            exit(1);
-        }
-        insertAtBeginning(&head, pid_worker); //this adds pid of child to linked list of processes that have yet not ended
-        printf("Child PID received: %d\n", pid_worker);
-        close(pipefd[0]);
-        */
+    
                 printf("Fork successful \n");
               //  for(int i=0;i < counter;i++){
               //      printf("The child  %d \n",pid_status[i]);
               //  }
-        
-
-
     }
 
          }

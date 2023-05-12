@@ -59,8 +59,14 @@ int checkList(struct Node* head, pid_t pid) {
     while (temp != NULL && temp->pid != pid) {
         temp = temp->next;
     }
-    if(temp->pid == pid) removeNode(&head,pid);
-    else insertAtBeginning(&head,pid);
-    printf("Pid added/removed from list %d \n",pid);
-    return 0;
+    if(temp->pid == pid) {
+        removeNode(&head,pid);
+        printf("Pid removed from list %d \n",pid);
+        return 0;
+    }
+    else {
+        insertAtBeginning(&head,pid);
+        printf("Pid added to list %d \n",pid);
+        return 1;
+        }
 }
