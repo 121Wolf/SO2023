@@ -17,8 +17,8 @@ struct Node {
 };
 
 
-void insertAtBeginning(struct Node** head, int data);
+void insertAtBeginning(struct Node* head, int data);
 int checkList(struct Node* head, pid_t pid);
-void removeNode(struct Node** head, int value);
+void removeNode(struct Node* head, int value);
 struct Node* createNode(pid_t pid);
 
