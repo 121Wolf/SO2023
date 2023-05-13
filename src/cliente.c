@@ -10,7 +10,6 @@
 #include <signal.h>
 #include "assist.h"
 
-
 #define PIPE_NAME "my_pipe"
 
 
@@ -88,26 +87,24 @@ int main() {
                         switch(pid) {
                             case 0: 
                                 printf("[DEBUG] I AM ALIVE \n");
-                                close(pipefd[0]);
                                 pid_worker[0] = getpid();
                                 // this will write the pid to his grandparent to be added to list of active processes
                                 if (write(pipefd[1], pid_worker, sizeof(pid_t)) == -1) {
                                     perror("cannot write to father");
                                     exit(1);
                                 }
-                                close(pipefd[1]);
                                 execl("/bin/ps","ps",NULL);
+                                break;
                             default:
                                 printf("[DEBUG] Este é o pid do processo filho %d \n",pid);
                                 printf("[DEBUG] Este é o pid do processo pai %d \n",getpid());
                                 pid_worker[0] = pid;
                                 wait(&status);
-                                close(pipefd[0]);
+                                kill(pid,SIGKILL);
                                 if (write(pipefd[1], pid_worker, sizeof(pid_t)) == -1) {
                                     perror("cannot write to father");
                                     _exit(1);
                                 }
-                                close(pipefd[1]);
                                 gettimeofday(time+1,NULL);
                                 if((bytes_written = write(fd, time+1,sizeof(struct timeval))) == -1){
                                     perror("FIFO Write:");
@@ -120,10 +117,10 @@ int main() {
                                     time[2].tv_usec += 1000000;
                                 }
                                 printf("\n[DEBUG] The seconds %ld and the microseconds %ld \n",time[2].tv_sec,time[2].tv_usec);
+                                close(fd);
+                                _exit(0);
                                 break;
                             }
-                        close(fd);
-                        _exit(0);
                         break;
                     case 2:
                         printf("\n[DEBUG] This returns the status \n");

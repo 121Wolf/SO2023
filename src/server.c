@@ -10,9 +10,24 @@
 
 #define PIPE_NAME "my_pipe"
 
+int parserinput(char * userinput){
+    strtok(userinput,"\n");
+    char* firstWord = strtok(userinput," ");
+    if (strcmp(userinput,"status") == 0)
+        return 2;
+    else if (strcmp(userinput,"exit") == 0)
+        return 0;
+    else if (strcmp(firstWord,"execute") == 0) {
+        char* secondWord = strtok(NULL," ");
+        if (strcmp(secondWord,"-u") == 0)
+            return 1;
+    }
+    return -1;
+}
+
 int main() {
-    int pipefd[2];
-    pid_t pid_worker;
+    //int pipefd[2];
+    //pid_t pid_worker;
     size_t fdfifo, fd_log;
     char buffer[256];
     int bytes_read;
@@ -65,12 +80,12 @@ int main() {
             readen += bytes_read;
             printf("Received: %s and  read %lu bytes \n", buffer, readen);
         }
-        fire = serverparser(buffer); //will parse the command that was given by the client
+        fire = parserinput(buffer); //will parse the command that was given by the client
         printf("Este é o Caso do parser: %d\n", fire);
         
         switch (fire)
         {
-        case /* constant-expression */:
+        case 0:/* constant-expression */
             /* code */
             break;
         
@@ -105,4 +120,5 @@ int main() {
     close(fd_log);
 
     return 0;
+}
 }
