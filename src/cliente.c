@@ -127,6 +127,7 @@ int main() {
                                 printf("[DEBUG] Este é o pid do processo pai %d \n",getpid());
                                 pid_worker[0] = pid;
                                 wait(&status);
+                                kill(pid, SIGKILL);
                                 gettimeofday(time+1,NULL);
                                 if((bytes_written = write(fd    , time+1,sizeof(struct timeval))) == -1){
                                     perror("FIFO Write:");
