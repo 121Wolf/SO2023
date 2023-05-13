@@ -15,6 +15,36 @@
 int liveness = 1;
 
 
+
+
+/*
+
+dif = 0x001
+pid = 0x001
+
+pidl = 0x002
+
+*pid = [nome*4,pid*4,next*4]
+
+*pid -> nome = 0x111
+
+**pid.pif = 1234
+**pid.nome = "ps"
+**pid.next = 0x002
+
+struct timeval time[100];
+pid_t pid[100];
+int counter= 0; 
+
+while(head !=NULL){
+    counter++;
+    pid = head->pid ;
+    time= head->time;
+}
+
+*/
+
+
 struct Node pid_status;// here we put the pids of child that have not finished yet
 struct Node *head = NULL;
 
@@ -55,7 +85,7 @@ int main() {
         while(1) {
             if (read(pipefd[0], pid_worker, sizeof(pid_t)) == -1) perror("read");
             printf("[DEBUG] PID RECEBIDO %d \n",pid_worker[0]);
-            checkList(head,pid_worker[0]);
+         //   checkList(head,pid_worker[0]);
         }
     } else {
         while(liveness) {
@@ -98,14 +128,6 @@ int main() {
                                 char* word = strtok(NULL," ");
                                 execl(word,word,NULL);
                             default:
-                                //writes the pid in the array of unfinished child pids, to be used for status
-                                /* counter = 0;                   
-                                for(int i = 0;i<10;i++){
-                                    if(pid_status != 0){
-                                        counter ++;
-                                    }
-                                    pid_status[counter++] = pid;
-                                    }*/
                                 printf("[DEBUG] Este é o pid do processo filho %d \n",pid);
                                 printf("[DEBUG] Este é o pid do processo pai %d \n",getpid());
                                 pid_worker[0] = pid;
