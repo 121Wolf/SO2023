@@ -13,8 +13,37 @@
 #define PIPE_NAME "my_pipe"
 
 
-struct Node pid_status;// here we put the pids of child that have not finished yet
-struct Node *head = NULL;
+
+
+/*
+
+dif = 0x001
+pid = 0x001
+
+pidl = 0x002
+
+*pid = [nome*4,pid*4,next*4]
+
+*pid -> nome = 0x111
+
+**pid.pif = 1234
+**pid.nome = "ps"
+**pid.next = 0x002
+
+struct timeval time[100];
+pid_t pid[100];
+int counter= 0; 
+
+while(head !=NULL){
+    counter++;
+    pid = head->pid ;
+    time= head->time;
+}
+
+*/
+
+
+
 
 
 int parserinput(char * userinput){
@@ -34,7 +63,9 @@ int parserinput(char * userinput){
 
 int main() {
     int fd; // the file descripter of my_pipe 
+    int fd_status; //fd of status pipe
     char userinput[256]; // user inputs on the terminal
+    char buffer[256]; // 
     pid_t pid_worker[1]; //buffer that hold the pid of a process 
     int bytes_written = 0, bytesread = 0;
     //int counter = 0; //counts the number of active processes in pid_status
@@ -47,14 +78,14 @@ int main() {
         perror("pipe");
         exit(1);
     }
-
+    
     pid_t processes = fork();
 
     if (processes == 0) {
         close(pipefd[1]); //close write end
         while(read(pipefd[0], pid_worker, sizeof(pid_t))) {
             printf("[DEBUG] PID RECEBIDO %d \n",pid_worker[0]);
-            checkList(head,pid_worker[0]);
+         //   checkList(head,pid_worker[0]);
         }
         close(pipefd[0]);
     } else {
@@ -70,6 +101,7 @@ int main() {
             
             pid_t pidcontrol=fork();
             
+            write(STDOUT_FILENO,outputbuff,)
             //the child process shall process the input command and the parent shall wait for more user inputs
             if (pidcontrol == 0){
                 switch (parser) {
@@ -87,12 +119,7 @@ int main() {
                         switch(pid) {
                             case 0: 
                                 printf("[DEBUG] I AM ALIVE \n");
-                                pid_worker[0] = getpid();
-                                // this will write the pid to his grandparent to be added to list of active processes
-                                if (write(pipefd[1], pid_worker, sizeof(pid_t)) == -1) {
-                                    perror("cannot write to father");
-                                    exit(1);
-                                }
+                                close(pipefd[1]);
                                 execl("/bin/ps","ps",NULL);
                                 break;
                             default:
@@ -100,13 +127,9 @@ int main() {
                                 printf("[DEBUG] Este é o pid do processo pai %d \n",getpid());
                                 pid_worker[0] = pid;
                                 wait(&status);
-                                kill(pid,SIGKILL);
-                                if (write(pipefd[1], pid_worker, sizeof(pid_t)) == -1) {
-                                    perror("cannot write to father");
-                                    _exit(1);
-                                }
+                                kill(pid, SIGKILL);
                                 gettimeofday(time+1,NULL);
-                                if((bytes_written = write(fd, time+1,sizeof(struct timeval))) == -1){
+                                if((bytes_written = write(fd    , time+1,sizeof(struct timeval))) == -1){
                                     perror("FIFO Write:");
                                 }
                                 time[2].tv_sec = time[1].tv_sec - time[0].tv_sec;
@@ -124,7 +147,16 @@ int main() {
                         break;
                     case 2:
                         printf("\n[DEBUG] This returns the status \n");
-                        //code here
+                         if((fd_status = open("status_pipe", O_RDONLY, 0666)) == -1){
+                          perror("Open fifo");
+                }
+                        if((bytes_written = write(fd, userinput,strlen(userinput))) == -1) perror("FIFO Write:\n");
+                        bzero(buffer, 256);
+                        char statusString[300];
+                        while ((bytesread = read(fd_status, buffer, sizeof(buffer))) > 0) {
+                                 printf("Received: %s  \n", buffer);
+        }               
+                        showPIDS(statusString); //Reveals to the user the pids, names and times of active processes
                         _exit(0);
                         break;
                     default:
