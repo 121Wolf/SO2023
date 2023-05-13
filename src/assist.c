@@ -12,6 +12,44 @@
 
 
 
+void stringToData(char* string, pid_t activepids[], char* name[], struct timeval stop[], int* size) {
+    int tempSize;
+    sscanf(string, "Number of elements: %d\n", &tempSize);
+    int counter = strlen("Number of elements: %d\n");
+    for (int i = 0; i < tempSize; i++) {
+        sscanf(string + counter, "Active PID[%*d]: %d\n", &activepids[i]);
+        counter += strlen("Active PID[%*d]: %d\n");
+    }
+    
+    for (int i = 0; i < tempSize; i++) {
+       sscanf(string + counter, "Name[%*d]: %[^\n]\n", name[i]);
+        counter += strlen("Name[%*d]: %[^\n]\n");
+    }
+    
+    for (int i = 0; i < tempSize; i++) {
+        sscanf(string + counter, "Stop time[%*d]: %ld seconds, %ld microseconds\n", &stop[i].tv_sec, &stop[i].tv_usec);
+        counter += strlen("Stop time[%*d]: %ld seconds, %ld microseconds\n");
+    }
+    
+    *size = tempSize;
+}
+
+
+void dataToString(pid_t activepids[], char* name[], struct timeval stop[], int size, char* string) {
+    int counter = 0;
+    counter += sprintf(string + counter, "Number of elements: %d\n", size);
+    for (int i = 0; i < size; i++) {
+        counter += sprintf(string + counter, "Active PID[%d]: %d\n", i, activepids[i]);
+    }
+    for (int i = 0; i < size; i++) {
+        counter += sprintf(string + counter, "Name[%d]: %s\n", i, name[i]);
+    }
+    for (int i = 0; i < size; i++) {
+        counter += sprintf(string + counter, "Stop time[%d]: %ld seconds, %ld microseconds\n", i, stop[i].tv_sec, stop[i].tv_usec);
+    }
+}
+
+
 
 // Creates a new node in the linked list
 struct Node* createNode(pid_t pid, char *name,struct timeval time) {
@@ -55,10 +93,10 @@ void insertAtBeginning(struct Node* head, pid_t pid, struct timeval time, char *
 }
 struct Node* pidIs(struct Node* head, pid_t pid){ //returns a node from linked list if the process is alreadty there. Returns null otherwise
      struct Node* temp = head;
-    while (temp != NULL && temp->pid != pid)
+     while (temp != NULL && temp->pid != pid)
         temp = temp->next;
 
-    if ( temp->pid == pid){
+     if ( temp->pid == pid){
             removeNode(head,pid);
             return temp;
     } 
