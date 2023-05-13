@@ -18,6 +18,7 @@ struct Node {
     struct Node* next;
 };
 
+void dataToString(pid_t activepids[], char* name[], struct timeval stop[], int size, char* str)
 struct Node* pidIs(struct Node* head, pid_t pid);
 void insertAtBeginning(struct Node* head, pid_t pid,struct timeval time, char *name);
 int checkList(struct Node* head, pid_t pid,char *name, struct timeval tempo);

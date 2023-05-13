@@ -46,6 +46,7 @@ while(head !=NULL){
 
 
 
+
 int parserinput(char * userinput){
     strtok(userinput,"\n");
     char* firstWord = strtok(userinput," ");
@@ -101,6 +102,7 @@ int main() {
             
             pid_t pidcontrol=fork();
             
+            write(STDOUT_FILENO,outputbuff,)
             //the child process shall process the input command and the parent shall wait for more user inputs
             if (pidcontrol == 0){
                 switch (parser) {
@@ -126,7 +128,7 @@ int main() {
                                 pid_worker[0] = pid;
                                 wait(&status);
                                 gettimeofday(time+1,NULL);
-                                if((bytes_written = write(fd, time+1,sizeof(struct timeval))) == -1){
+                                if((bytes_written = write(fd    , time+1,sizeof(struct timeval))) == -1){
                                     perror("FIFO Write:");
                                 }
                                 time[2].tv_sec = time[1].tv_sec - time[0].tv_sec;
