@@ -53,7 +53,7 @@ int main() {
                     break;
                 case 1: //execute -u 
                     struct timeval time[3];
-                    if((bytes_written = write(fd, temp,strlen(temp)))) == -1) perror("FIFO Write:\n");
+                    if((bytes_written = write(fd, temp,strlen(temp))) == -1) perror("FIFO Write:\n");
                     gettimeofday(time,0);
                     if((bytes_written = write(fd, time,sizeof(struct timeval))) == -1) perror("FIFO Write:\n");
                     pid_t pid=fork();
