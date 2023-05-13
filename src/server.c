@@ -19,7 +19,7 @@ int main() {
     int pipefd[2];
     pid_t pid_worker[1];
     pid_t pid_fire;
-    size_t fdfifo, fd_log;
+    size_t fdfifo, fd_log,fd_status;
     char buffer[256];
     char ctrlbuf[200];
     int bytes_read;
@@ -29,8 +29,12 @@ int main() {
     //char *message = "mete isto";
 
    // buffer = (char *) malloc(256);
-    // create named pipe
+    // create named pipe to read from clients
     if(mkfifo(PIPE_NAME, 0666) == -1){
+        perror("MKFIFO");
+    }
+    //create named pipe to write to client
+    if(mkfifo("status_pipe", 0666) == -1){
         perror("MKFIFO");
     }
     //open log.txt
@@ -46,6 +50,9 @@ int main() {
 
     // open pipe for reading
     if((fdfifo = open(PIPE_NAME, O_RDONLY, 0666)) == -1){
+        perror("Open fifo");
+    }
+    if((fd_status = open("status_pipe", O_WRONLY, 0666)) == -1){
         perror("Open fifo");
     }
     printf("[DEBUG] opened FIFO for reading\n");
@@ -145,6 +152,8 @@ int main() {
                 }
               
                  statusString = statusparser(activepids,&name,stop,counter+1);//will parse informartion into a string
+                 if((bytes_written = write(fd_status, statusString,strlen(statusString))) == -1) perror("FIFO Write:\n");
+
            break;
 
         default: //this is unkown command case
