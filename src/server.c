@@ -37,11 +37,7 @@ int main() {
     char ctrlbuf[200];
     int fire = 0;
     int bytes_written;
-    //  int bytes_wrote;
-    //char *message = "mete isto";
 
-   // buffer = (char *) malloc(256);
-    // create named pipe to read from clients
     if(mkfifo(PIPE_NAME, 0666) == -1){
         perror("MKFIFO");
     }
@@ -61,9 +57,6 @@ int main() {
     }
 
     // open pipe for reading
-    if((fdfifo = open(PIPE_NAME, O_RDONLY, 0666)) == -1){
-        perror("Open fifo");
-    }
     if((fd_status = open("status_pipe", O_WRONLY, 0666)) == -1){
         perror("Open fifo");
     }
@@ -106,18 +99,16 @@ int main() {
     //puts all values of buffer to \0
         while(1){
             bzero(buffer, 256);
+            if((fdfifo = open(PIPE_NAME, O_RDONLY, 0666)) == -1) perror("Open fifo");
             printf("[DEBUG] Server listening... fdfifo %lu \n",fdfifo);
             // read from pipe and print to console
             size_t readen = 0;
-            while (1) {
-                readen = read(fdfifo, buffer, sizeof(buffer));
+            int bytes_read = 0;
+            while ((bytes_read = read(fdfifo, buffer, sizeof(buffer))) > 0) {
+                readen = bytes_read;
                 write(fd_log,buffer,readen);
                 write(STDOUT_FILENO,buffer,readen);
-                for (size_t i = 0; i < readen; i++)
-                    if (buffer[i] == '!') break;
             }
-            close(fd_log);
-            printf("Acabou\n");
             fire = parserinput(buffer); //will parse the command that was given by the client
             pid_fire = fork();
             if(pid_fire == 0){
