@@ -10,6 +10,16 @@
 #include <sys/time.h>
 #include <stdlib.h>
 
+int parserinput(char * input_string){
+    if (strncmp(input_string, "execute -u", 10) == 0) {
+        return 1;
+    } else if (strcmp(input_string, "status") == 0) {
+        return 2;
+    } else {
+        return 0;
+    }
+}
+
 
 
 void stringToData(char* string, pid_t activepids[], char* name[], struct timeval stop[], int* size) {
@@ -33,6 +43,8 @@ void stringToData(char* string, pid_t activepids[], char* name[], struct timeval
     
     *size = tempSize;
 }
+
+
 
 
 void dataToString(pid_t activepids[], char* name[], struct timeval stop[], int size, char* string) {
