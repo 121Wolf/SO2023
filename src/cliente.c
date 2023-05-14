@@ -83,7 +83,9 @@ int main() {
                 case 0:
                     break;
                 case 1: //execute -u 
+                    if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
                     if((bytes_written = write(fd, temp,strlen(temp))) == -1) perror("FIFO Write:\n");
+                    close(fd);
                     logMessage[12] = longToString(getpid());
                     //if((bytes_written = write(fd, time,sizeof(struct timeval))) == -1) perror("FIFO Write:\n");
                     pid_t pid=fork();

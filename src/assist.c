@@ -159,7 +159,7 @@ char* longToString(long arg) {
 void writeStrings(int fileDesciptor, char** strings) {
     int index = 0;
     char *tmp;
-
+    printf("%s\n", strings[4]);
     while ((tmp = strings[index++]) != NULL) {
         write(fileDesciptor, tmp, strlen(tmp) * sizeof(char));
     }
