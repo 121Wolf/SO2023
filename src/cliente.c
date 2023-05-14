@@ -12,23 +12,7 @@
 
 #define PIPE_NAME "my_pipe"
 
-char* logMessage[32] = {
-    "year",
-    "-",
-    "day",
-    "-",
-    "hour",
-    "-",
-    "minute",
-    "-",
-    "second",
-    "-",
-    "microS",
-    " : PID=",
-    "pid",
-    "\n",
-    NULL
-};
+
 
 void logWrite(int fd,pid_t pid,char *  message) {
     struct timeval tv;
@@ -81,10 +65,13 @@ int main() {
         if (pidcontrol == 0){
             switch (parser) {
                 case 0:
+                    size_t j = 4;
+                    if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
+                    write(fd,&j,sizeof(size_t));
+                    if ((bytes_written = write(fd, "exit",j)) == -1) perror("FIFO Write:\n");
+                    close(fd);
                     break;
                 case 1: //execute -u 
-                    logMessage[12] = longToString(getpid());
-                    //if((bytes_written = write(fd, time,sizeof(struct timeval))) == -1) perror("FIFO Write:\n");
                     pid_t pid =fork();
                     switch(pid) {
                         case 0: 

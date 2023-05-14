@@ -7,6 +7,25 @@
 #include <sys/stat.h>
 #include "assist.h"
 
+char* logMessage[32] = {
+    "year",
+    "-",
+    "day",
+    "-",
+    "hour",
+    "-",
+    "minute",
+    "-",
+    "second",
+    "-",
+    "microS",
+    " : PID=",
+    "pid",
+    " : Nome=",
+    "nome",
+    "\n",
+    NULL
+};
 
 #define PIPE_NAME "my_pipe"
 
@@ -15,6 +34,8 @@ int parserinput(char * userinput){
     strtok(userinput," ");
     if (strcmp(userinput,"status") == 0)
         return 2;
+    if (strcmp(userinput,"exit") == 0)
+        return 0;
     else return 1;
 }
 
@@ -70,13 +91,8 @@ int main() {
                 read(pipefd[0],&flag,sizeof(int));
                 if (flag == 1) {
                     if (read(pipefd[0], &node, sizeof(struct Node )) == -1) perror("read");
-                    printf("[DEBUG] PID %d TEMPO %ld nome %s \n",node.pid,node.time.tv_usec,node.name);
                     struct Node* spain;
-
-                    if (head != NULL)
-                        printf("PID %d\n",head->pid);
-                    else printf("A cabeça está vazia\n");
-                    if((spain=pidIs(head,node.pid))!= NULL){   
+                    if((spain=pidIs(&head,node.pid))!= NULL){   
                                                                                                               //percorre e encontra um pid igual na lista ligada 
                                                                                                             //faz a contagem do tempo
                                                                                                             //meter o processo no log file
@@ -88,18 +104,12 @@ int main() {
                                     diff.tv_sec--;
                                     diff.tv_usec += 1000000;
                                 }
-                                if (head == NULL) printf("Okay, faz sentido\n");
                                 printf("[DEBUG] The seconds %ld and the microseconds %ld \n",diff.tv_sec,diff.tv_usec); 
                                 //escrever no log     NEED TO BE DONE !!!!!!!!!! 
-                                break;
                     }else{
                         //adds the new process to the begining of the list
-                        if((head = checkList(&head,node.pid,node.name,node.time)) != NULL) {
-                            printf("[DEBUG] NODE ADDED TO LIST OF ACTIVE PROCESSES\n");
-                        }
-                        else printf("[DEBUG] Something is wrong I can feel it\n");
+                        head = checkList(head,node.pid,node.name,node.time);
                     }       
-                    printf("[DEBUG] LIST OF PROCESSES UPDATE, will read again\n");
                 } else if (flag == 2) {
                     pid_t activepids[50];
                     char *name[50];
@@ -107,7 +117,6 @@ int main() {
                     struct Node* temp = head;
                     int counter = 0; //atributes the first process to [0] and so on. counter +1 = number of processes
                     char statusString[300];
-                    if (head != NULL) printf("HEAD is %d\n",head->pid);
                     //SHOULD THIS BE DONE IN THE PROCESS CHILD TO SECURE DATA?
                     while (temp != NULL){
                         activepids[counter] = temp->pid;
@@ -119,7 +128,6 @@ int main() {
                     } 
                     if (counter == 0) {
                         printf("Não existem processos ativos\n");
-                        break;
                     }
                     struct timeval end,diff[50];
                     gettimeofday(&end,NULL);
@@ -136,6 +144,8 @@ int main() {
 
                     dataToString(activepids,name,diff,counter,statusString);//will parse informartion into a string
                     if((bytes_written = write(fd_status, statusString,strlen(statusString))) == -1) perror("FIFO Write:\n");
+                } else {
+                    head = NULL;
                 }
             }
         close(pipefd[0]);
@@ -169,6 +179,10 @@ int main() {
                         perror("cannot write to pid controller");
                         exit(1);
                     }
+                    logMessage[12] = longToString(node->pid);
+                    logMessage[14] = node->name; 
+                    time_format(node->time,logMessage);
+                    writeStrings(fd_log,logMessage);
                     free(node);
                     close(pipefd[1]);
                     break;
@@ -177,6 +191,10 @@ int main() {
                     printf("Received status\n");
                     flag = 2;
                     write(pipefd[1], &flag, sizeof(int));                    
+                    break;
+                case 0:
+                    flag = 0;
+                    write(pipefd[1], &flag, sizeof(int));   
                     break;
                 default:
                     printf("[DEBUG] Error! Command unknown");
