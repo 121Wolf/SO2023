@@ -12,6 +12,36 @@
 
 #define PIPE_NAME "my_pipe"
 
+char* logMessage[32] = {
+    "year",
+    "-",
+    "day",
+    "-",
+    "hour",
+    "-",
+    "minute",
+    "-",
+    "second",
+    "-",
+    "microS",
+    " : PID=",
+    "pid",
+    "\n",
+    NULL
+};
+
+void logWrite(int fd) {
+    struct timeval tv;
+    
+    // String do timestamp
+    gettimeofday(&tv, 0);
+    time_format(tv, logMessage);
+
+    // Escrita de strings no Pipe
+    writeStrings(fd, logMessage);
+    freeLogPointers(logMessage);
+}
+
 int parserinput(char* userinput) {
     strtok(userinput,"\n");
     char* firstWord = strtok(userinput," ");
@@ -52,10 +82,9 @@ int main() {
                 case 0:
                     break;
                 case 1: //execute -u 
-                    struct timeval time[3];
                     if((bytes_written = write(fd, temp,strlen(temp))) == -1) perror("FIFO Write:\n");
-                    gettimeofday(time,0);
-                    if((bytes_written = write(fd, time,sizeof(struct timeval))) == -1) perror("FIFO Write:\n");
+                    logMessage[12] = longToString(getpid());
+                    //if((bytes_written = write(fd, time,sizeof(struct timeval))) == -1) perror("FIFO Write:\n");
                     pid_t pid=fork();
                     switch(pid) {
                         case 0: 
@@ -65,18 +94,14 @@ int main() {
                             execvp(args[0],args);
                             break;
                         default:
+                            logWrite(fd);
                             wait(&status);
-                            gettimeofday(time+1,NULL);
-                            if((bytes_written = write(fd, time+1,sizeof(struct timeval))) == -1){
-                                perror("FIFO Write:");
-                            }
-                            time[2].tv_sec = time[1].tv_sec - time[0].tv_sec;
-                            time[2].tv_usec = time[1].tv_usec - time[0].tv_usec;
-                            //normalizes the diffrence
-                            if (time[2].tv_usec < 0) {
-                                time[2].tv_sec--;
-                                time[2].tv_usec += 1000000;
-                            }
+                            logWrite(fd);
+                            free(logMessage[12]);
+                            //if((bytes_written = write(fd, time+1,sizeof(struct timeval))) == -1){
+                            //    perror("FIFO Write:");
+                            //}
+                            close(fd);
                             _exit(0);
                             break;
                         }

@@ -12,17 +12,10 @@
 
 int parserinput(char * userinput){
     strtok(userinput,"\n");
-    char* firstWord = strtok(userinput," ");
+    strtok(userinput," ");
     if (strcmp(userinput,"status") == 0)
         return 2;
-    else if (strcmp(userinput,"exit") == 0)
-        return 0;
-    else if (strcmp(firstWord,"execute") == 0) {
-        char* secondWord = strtok(NULL," ");
-        if (strcmp(secondWord,"-u") == 0)
-            return 1;
-    }
-    return -1;
+    else return 1;
 }
 
 void fullparser(char * string, struct timeval * timestamp, pid_t *pid, char * name) {
@@ -42,10 +35,9 @@ int main() {
     size_t fdfifo, fd_log,fd_status;
     char buffer[256];
     char ctrlbuf[200];
-    int bytes_read;
     int fire = 0;
     int bytes_written;
-  //  int bytes_wrote;
+    //  int bytes_wrote;
     //char *message = "mete isto";
 
    // buffer = (char *) malloc(256);
@@ -58,7 +50,7 @@ int main() {
         perror("MKFIFO");
     }
     //open log.txt
-    if ((fd_log = open("log.txt",  O_CREAT | O_TRUNC | O_WRONLY, 0666)) == -1) {
+    if ((fd_log = open("../log.txt",  O_CREAT | O_APPEND | O_RDWR , 0666)) == -1) {
         perror("Open log.txt");
         return -1;
     }
@@ -87,7 +79,7 @@ int main() {
                 struct Node* spain= NULL;
                 fullparser(ctrlbuf,tempo,newpid, newname);
                 printf("[DEBUG] PID %d TEMPO %ld nome %s \n",*newpid,tempo->tv_sec,newname);
-                if((spain=pidIs(head,*newpid))!= NULL){                                                  //percorre e encontra um pid igual na lista ligada 
+                if((spain=pidIs(head,*newpid))!= NULL){                                                 //percorre e encontra um pid igual na lista ligada 
                                                                                                         //faz a contagem do tempo
                                                                                                         //meter o processo no log file
                                                                                                         //retira o node com este pid
@@ -110,73 +102,71 @@ int main() {
                 printf("[DEBUG] LIST OF PROCESSES UPDATE, will read again");
             }
         close(pipefd[0]);
-    }
-
-     else{
+    }else{
     //puts all values of buffer to \0
-    while(1){
-        bzero(buffer, 256);
-        printf("[DEBUG] Server listening... fdfifo %lu \n",fdfifo);
-     // read from pipe and print to console
-        size_t readen = 0;
-        bytes_read = read(fdfifo, buffer, sizeof(buffer));
-        printf("Received: %s and  read %i bytes \n", buffer, bytes_read);
-        fire = parserinput(buffer); //will parse the command that was given by the client
-        printf("Este é o Caso do parser: %d\n", fire);
-        pid_fire = fork();
-        if(pid_fire == 0){
-        switch (fire){
-            case 1: //this is the execute case
-               close(pipefd[0]);
-                if (write(pipefd[1], buffer, readen) == -1) {
-                    perror("cannot write to pid controller");
-                    exit(1);
-                }
-                close(pipefd[1]);
-                break;
-        
-            case 2: //this is status case
-                printf("Received status\n");
-                pid_t activepids[50];
-                char *name[50];
-                struct timeval stop[50];
-                struct Node* temp = head;
-                int counter = 0; //atributes the first process to [0] and so on. counter +1 = number of processes
-                char statusString[300];
-                //SHOULD THIS BE DONE IN THE PROCESS CHILD TO SECURE DATA?
-                while (temp != NULL){
-                    activepids[counter] = temp->pid;
-                    name[counter] = temp->name;
-                    stop[counter] = temp->time;
-                    temp = temp->next;
-                    counter++;
-              } 
-                struct timeval end,diff[50];
-                gettimeofday(&end,NULL);
-                for(int i = 0; i <= counter;i++){
-                    diff[i].tv_sec = end.tv_sec - stop[i].tv_sec;
-                    diff[i].tv_usec = end.tv_usec - stop[i].tv_usec;
-                    //normalizes the diffrence
-                    if (diff[i].tv_usec < 0) {
-                        diff[i].tv_sec--;
-                        diff[i].tv_usec += 1000000;
+        while(1){
+            bzero(buffer, 256);
+            printf("[DEBUG] Server listening... fdfifo %lu \n",fdfifo);
+            // read from pipe and print to console
+            size_t readen = 0;
+            while (buffer[0] != '!') {
+                readen = read(fdfifo, buffer, sizeof(buffer));
+                write(fd_log,buffer,readen);
+            }
+            printf("Acabou\n");
+            fire = parserinput(buffer); //will parse the command that was given by the client
+            pid_fire = fork();
+            if(pid_fire == 0){
+            switch (fire){
+                case 1: //this is the execute case
+                   close(pipefd[0]);
+                    if (write(pipefd[1], buffer, readen) == -1) {
+                        perror("cannot write to pid controller");
+                        exit(1);
                     }
-                    printf("[DEBUG] The seconds %ld and the microseconds %ld \n",diff[i].tv_sec,diff[i].tv_usec);
-                }
+                    close(pipefd[1]);
+                    break;
+        
+                case 2: //this is status case
+                    printf("Received status\n");
+                    pid_t activepids[50];
+                    char *name[50];
+                    struct timeval stop[50];
+                    struct Node* temp = head;
+                    int counter = 0; //atributes the first process to [0] and so on. counter +1 = number of processes
+                    char statusString[300];
+                    //SHOULD THIS BE DONE IN THE PROCESS CHILD TO SECURE DATA?
+                    while (temp != NULL){
+                        activepids[counter] = temp->pid;
+                        name[counter] = temp->name;
+                        stop[counter] = temp->time;
+                        temp = temp->next;
+                        counter++;
+                    } 
+                    struct timeval end,diff[50];
+                    gettimeofday(&end,NULL);
+                    for(int i = 0; i <= counter;i++){
+                        diff[i].tv_sec = end.tv_sec - stop[i].tv_sec;
+                        diff[i].tv_usec = end.tv_usec - stop[i].tv_usec;
+                        //normalizes the diffrence
+                        if (diff[i].tv_usec < 0) {
+                            diff[i].tv_sec--;
+                            diff[i].tv_usec += 1000000;
+                        }
+                        printf("[DEBUG] The seconds %ld and the microseconds %ld \n",diff[i].tv_sec,diff[i].tv_usec);
+                    }
 
-                dataToString(activepids,name,stop,counter+1,statusString);//will parse informartion into a string
-                if((bytes_written = write(fd_status, statusString,strlen(statusString))) == -1) perror("FIFO Write:\n");
-                break;
-
-            default:
-                printf("[DEBUG] Error! Command unknown");
-                _exit(0);
-                break;
-        }
-
+                    dataToString(activepids,name,stop,counter+1,statusString);//will parse informartion into a string
+                    if((bytes_written = write(fd_status, statusString,strlen(statusString))) == -1) perror("FIFO Write:\n");
+                    break;
+                default:
+                    printf("[DEBUG] Error! Command unknown");
+                    _exit(0);
+                    break;
+            }
             _exit(0);
         }
-       }
+    }
     
     // close the pipe
     close(fdfifo);
