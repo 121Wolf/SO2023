@@ -66,7 +66,6 @@ int main() {
     int status = 0;
     int parser = 1;
     
-    if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
     if((fd_status = open("status_pipe", O_RDONLY, 0666)) == -1) perror("Open fifo");
 
     while(parser) {
@@ -96,8 +95,11 @@ int main() {
                             execvp(args[0],args);
                             break;
                         default:
+                            if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
                             logWrite(fd);
+                            close(fd);
                             wait(&status);
+                            if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
                             logWrite(fd);
                             free(logMessage[12]);
                             //if((bytes_written = write(fd, time+1,sizeof(struct timeval))) == -1){
@@ -124,7 +126,6 @@ int main() {
             bzero(userinput,sizeof(userinput));
         }
     }
-    close(fd);
     // close the pipe 
     return 0;        
 }

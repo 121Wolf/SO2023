@@ -109,11 +109,14 @@ int main() {
             printf("[DEBUG] Server listening... fdfifo %lu \n",fdfifo);
             // read from pipe and print to console
             size_t readen = 0;
-            while (buffer[0] != '!') {
+            while (1) {
                 readen = read(fdfifo, buffer, sizeof(buffer));
                 write(fd_log,buffer,readen);
                 write(STDOUT_FILENO,buffer,readen);
+                for (size_t i = 0; i < readen; i++)
+                    if (buffer[i] == '!') break;
             }
+            close(fd_log);
             printf("Acabou\n");
             fire = parserinput(buffer); //will parse the command that was given by the client
             pid_fire = fork();

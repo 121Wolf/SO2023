@@ -10,6 +10,7 @@
 #include <sys/time.h>
 #include <stdlib.h>
 
+/*
 int parserinput(char * input_string){
     if (strncmp(input_string, "execute -u", 10) == 0) {
         return 1;
@@ -19,7 +20,7 @@ int parserinput(char * input_string){
         return 0;
     }
 }
-
+*/
 
 
 void stringToData(char* string, pid_t activepids[], char* name[], struct timeval stop[], int* size) {
@@ -162,7 +163,6 @@ void writeStrings(int fileDesciptor, char** strings) {
     while ((tmp = strings[index++]) != NULL) {
         write(fileDesciptor, tmp, strlen(tmp) * sizeof(char));
     }
-    write(fileDesciptor, "!", 2);
 }
 
 void time_format(struct timeval tv, char** logMessage) {
