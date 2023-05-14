@@ -30,16 +30,16 @@ char* logMessage[32] = {
     NULL
 };
 
-void logWrite(int fd) {
+void logWrite(int fd,pid_t pid,char *  message) {
     struct timeval tv;
-    
+    size_t size = strlen(message);
     // String do timestamp
     gettimeofday(&tv, 0);
-    time_format(tv, logMessage);
-
-    // Escrita de strings no Pipe
-    writeStrings(fd, logMessage);
-    freeLogPointers(logMessage);
+    
+    write(fd,&size,sizeof(size_t));
+    write(fd,message,size);
+    write(fd,&pid,sizeof(pid));
+    write(fd,&tv,sizeof(tv));
 }
 
 int parserinput(char* userinput) {
@@ -67,6 +67,7 @@ int main() {
     int parser = 1;
     
     if((fd_status = open("status_pipe", O_RDONLY, 0666)) == -1) perror("Open fifo");
+    if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
 
     while(parser) {
         if((bytesread = read(STDIN_FILENO,userinput,sizeof(userinput))) == -1) perror("Userinput:");
@@ -83,12 +84,9 @@ int main() {
                 case 0:
                     break;
                 case 1: //execute -u 
-                    if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
-                    if((bytes_written = write(fd, temp,strlen(temp))) == -1) perror("FIFO Write:\n");
-                    close(fd);
                     logMessage[12] = longToString(getpid());
                     //if((bytes_written = write(fd, time,sizeof(struct timeval))) == -1) perror("FIFO Write:\n");
-                    pid_t pid=fork();
+                    pid_t pid =fork();
                     switch(pid) {
                         case 0: 
                             int i = 0;
@@ -97,23 +95,21 @@ int main() {
                             execvp(args[0],args);
                             break;
                         default:
-                            if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
-                            logWrite(fd);
-                            close(fd);
+                            char * word = strtok(NULL," ");
+                            logWrite(fd,pid,word);
                             wait(&status);
-                            if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
-                            logWrite(fd);
-                            free(logMessage[12]);
+                            logWrite(fd,pid,word);
                             //if((bytes_written = write(fd, time+1,sizeof(struct timeval))) == -1){
                             //    perror("FIFO Write:");
                             //}
-                            close(fd);
                             _exit(0);
                             break;
                         }
                     break;
                 case 2:
+                    if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
                     if ((bytes_written = write(fd, "status",7)) == -1) perror("FIFO Write:\n");
+                    close(fd);
                     bzero(buffer, 256);
                     while ((bytesread = read(fd_status, buffer, sizeof(buffer))) > 0) {
                              printf("Received: %s \n", buffer);
@@ -128,6 +124,7 @@ int main() {
             bzero(userinput,sizeof(userinput));
         }
     }
+    close(fd);
     // close the pipe 
     return 0;        
 }

@@ -34,7 +34,6 @@ int main() {
     pid_t pid_fire;
     size_t fdfifo, fd_log,fd_status;
     char buffer[256];
-    char ctrlbuf[200];
     int fire = 0;
     int bytes_written;
 
@@ -65,19 +64,17 @@ int main() {
     if(processes == 0){
         close(pipefd[1]); //close write end
             while(1){
-                if (read(pipefd[0], ctrlbuf, sizeof(ctrlbuf)) == -1) perror("read");
-                struct timeval *tempo = NULL,diff;
-                pid_t *newpid = 0;
-                char newname[50];
-                struct Node* spain= NULL;
-                fullparser(ctrlbuf,tempo,newpid, newname);
-                printf("[DEBUG] PID %d TEMPO %ld nome %s \n",*newpid,tempo->tv_sec,newname);
-                if((spain=pidIs(head,*newpid))!= NULL){                                                 //percorre e encontra um pid igual na lista ligada 
+                struct Node* node = malloc(sizeof(struct Node));
+                struct timeval diff;
+                if (read(pipefd[0], node, sizeof(struct Node *)) == -1) perror("read");
+                printf("[DEBUG] PID %d TEMPO %ld nome %s \n",node->pid,node->time.tv_usec,node->name);
+                struct Node* spain;
+                if((spain=pidIs(head,node->pid))!= NULL){                                                 //percorre e encontra um pid igual na lista ligada 
                                                                                                         //faz a contagem do tempo
                                                                                                         //meter o processo no log file
                                                                                                         //retira o node com este pid
-                            diff.tv_sec = tempo->tv_sec - spain->time.tv_sec;
-                            diff.tv_usec = tempo->tv_usec - spain->time.tv_usec;
+                            diff.tv_sec = node->time.tv_sec - spain->time.tv_sec;
+                            diff.tv_usec = node->time.tv_usec - spain->time.tv_usec;
                             //normalizes the diffrence
                             if (diff.tv_usec < 0) {
                                 diff.tv_sec--;
@@ -88,37 +85,42 @@ int main() {
                             break;
                 }else{
                     //adds the new process to the begining of the list
-                    if(checkList(head,*newpid,newname,*tempo) == 0)
+                    if(checkList(head,node->pid,node->name,node->time) == 0)
                         printf("[DEBUG] NODE ADDED TO LIST OF ACTIVE PROCESSES");
                     else printf("[DEBUG] Something is wrong I can feel it");
+                    free(node);
                 }       
                 printf("[DEBUG] LIST OF PROCESSES UPDATE, will read again");
             }
         close(pipefd[0]);
     }else{
     //puts all values of buffer to \0
+        if((fdfifo = open(PIPE_NAME, O_RDONLY, 0666)) == -1) perror("Open fifo");
         while(1){
             bzero(buffer, 256);
-            if((fdfifo = open(PIPE_NAME, O_RDONLY, 0666)) == -1) perror("Open fifo");
+            pid_t pid;
+            size_t size;
+            struct timeval timestamp;
             printf("[DEBUG] Server listening... fdfifo %lu \n",fdfifo);
             // read from pipe and print to console
-            size_t readen = 0;
-            int bytes_read = 0;
-            while ((bytes_read = read(fdfifo, buffer, sizeof(buffer))) > 0) {
-                readen = bytes_read;
-                write(fd_log,buffer,readen);
-                write(STDOUT_FILENO,buffer,readen);
+            if (read(fdfifo,&size,sizeof(size_t)) > 0)
+                read(fdfifo,buffer,size);
+            if ((fire= parserinput(buffer)) ==  1) {
+                read(fdfifo,&pid,sizeof(pid_t));
+                read(fdfifo,&timestamp,sizeof(struct timeval));
+                printf("%d %s \n",pid,buffer);
             }
-            fire = parserinput(buffer); //will parse the command that was given by the client
             pid_fire = fork();
             if(pid_fire == 0){
             switch (fire){
                 case 1: //this is the execute case
                    close(pipefd[0]);
-                    if (write(pipefd[1], buffer, readen) == -1) {
+                   struct Node* node = createNode(pid,buffer,timestamp);
+                    if (write(pipefd[1], node, sizeof(struct Node *)) == -1) {
                         perror("cannot write to pid controller");
                         exit(1);
                     }
+                    free(node);
                     close(pipefd[1]);
                     break;
         
