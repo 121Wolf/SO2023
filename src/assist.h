@@ -28,8 +28,8 @@ void freeLogPointers (char** logMessage);
 
 void dataToString(pid_t activepids[], char* name[], struct timeval stop[], int size, char* str);
 struct Node* pidIs(struct Node* head, pid_t pid);
-struct Node* insertAtBeginning(struct Node* head, pid_t pid,struct timeval time, char *name);
-struct Node* checkList(struct Node* head, pid_t pid,char *name, struct timeval tempo);
+struct Node* insertAtBeginning(struct Node** head, pid_t pid,struct timeval time, char *name);
+struct Node* checkList(struct Node** head, pid_t pid,char *name, struct timeval tempo);
 void removeNode(struct Node* head, pid_t pid);
 struct Node* createNode(pid_t pid, char *name, struct timeval time);
 

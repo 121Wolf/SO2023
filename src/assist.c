@@ -66,11 +66,13 @@ void dataToString(pid_t activepids[], char* name[], struct timeval stop[], int s
 
 // Creates a new node in the linked list
 struct Node* createNode(pid_t pid, char *name,struct timeval time) {
+    printf("A criar novos nos\n");
     struct Node* newNode = malloc(sizeof(struct Node));
     newNode->pid = pid;
     strncpy(newNode->name, name, sizeof(newNode->name) - 1); //n sei se está certo
     newNode->time = time;
     newNode->next = NULL;
+    printf("Este é o novo nó %d\n",newNode->pid);
     return newNode;
 }
 
@@ -83,7 +85,10 @@ void removeNode(struct Node* head, pid_t value) {
     struct Node* previous = NULL;
 
     if(current != NULL && current->pid == value){
-        *head = *current->next;
+        head = current->next;
+        free(current);
+        if (head == NULL) printf("Teste 1\n");
+        printf("Aconteceu isto\n");
         return;
     }
     while (current != NULL && current->pid != value) {
@@ -97,9 +102,9 @@ void removeNode(struct Node* head, pid_t value) {
     }
 }
 
-struct Node * insertAtBeginning(struct Node* head, pid_t pid, struct timeval time, char *name) {
+struct Node * insertAtBeginning(struct Node** head, pid_t pid, struct timeval time, char *name) {
     struct Node* newNode = createNode(pid,name, time);
-    newNode->next = head;
+    newNode->next = *head;
     return newNode;
 }
 struct Node* pidIs(struct Node* head, pid_t pid){ //returns a node from linked list if the process is alreadty there. Returns null otherwise
@@ -109,26 +114,29 @@ struct Node* pidIs(struct Node* head, pid_t pid){ //returns a node from linked l
 
     /*NULL -> pid*/
     if (temp == NULL) {
+        head = NULL;
+        printf("Afinal ficou NULL\n");
         return NULL;
     }
     else {
         removeNode(head,pid);
+        if (head == NULL)
+            printf("É o suposto de acontecer\n");
         return temp;
     } 
 }
 
-struct Node* checkList(struct Node* head, pid_t pid,char *name, struct timeval tempo) {
-    struct Node* temp = head;
+struct Node* checkList(struct Node** head, pid_t pid,char *name, struct timeval tempo) {
+    struct Node* temp = *head;
     while (temp != NULL && temp->pid != pid)
         temp = temp->next;
-
+    if (*head == NULL) printf("È o suposto numa vazia\n");
     if (temp == NULL) {
-        return insertAtBeginning(head,pid,tempo,name);
+        temp = insertAtBeginning(head,pid,tempo,name);
+        printf("Este é o Temp %d\n",temp->pid);
+        return temp;
     }
-    else {
-        removeNode(head,pid);
-        return NULL;
-    }
+    return NULL;
 }
 
 char* longToString(long arg) {

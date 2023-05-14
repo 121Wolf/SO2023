@@ -72,6 +72,10 @@ int main() {
                     if (read(pipefd[0], &node, sizeof(struct Node )) == -1) perror("read");
                     printf("[DEBUG] PID %d TEMPO %ld nome %s \n",node.pid,node.time.tv_usec,node.name);
                     struct Node* spain;
+
+                    if (head != NULL)
+                        printf("PID %d\n",head->pid);
+                    else printf("A cabeça está vazia\n");
                     if((spain=pidIs(head,node.pid))!= NULL){   
                                                                                                               //percorre e encontra um pid igual na lista ligada 
                                                                                                             //faz a contagem do tempo
@@ -84,12 +88,13 @@ int main() {
                                     diff.tv_sec--;
                                     diff.tv_usec += 1000000;
                                 }
+                                if (head == NULL) printf("Okay, faz sentido\n");
                                 printf("[DEBUG] The seconds %ld and the microseconds %ld \n",diff.tv_sec,diff.tv_usec); 
                                 //escrever no log     NEED TO BE DONE !!!!!!!!!! 
                                 break;
                     }else{
                         //adds the new process to the begining of the list
-                        if((head = checkList(head,node.pid,node.name,node.time)) != NULL) {
+                        if((head = checkList(&head,node.pid,node.name,node.time)) != NULL) {
                             printf("[DEBUG] NODE ADDED TO LIST OF ACTIVE PROCESSES\n");
                         }
                         else printf("[DEBUG] Something is wrong I can feel it\n");
