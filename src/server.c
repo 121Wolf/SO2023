@@ -112,6 +112,7 @@ int main() {
             while (buffer[0] != '!') {
                 readen = read(fdfifo, buffer, sizeof(buffer));
                 write(fd_log,buffer,readen);
+                write(STDOUT_FILENO,buffer,readen);
             }
             printf("Acabou\n");
             fire = parserinput(buffer); //will parse the command that was given by the client

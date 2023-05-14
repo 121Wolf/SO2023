@@ -150,7 +150,7 @@ void writeStrings(int fileDesciptor, char** strings) {
     while ((tmp = strings[index++]) != NULL) {
         write(fileDesciptor, tmp, strlen(tmp) * sizeof(char));
     }
-    write(fileDesciptor, "!", 1);
+    write(fileDesciptor, "!", 2);
 }
 
 void time_format(struct timeval tv, char** logMessage) {

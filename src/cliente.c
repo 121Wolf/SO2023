@@ -67,6 +67,8 @@ int main() {
     int parser = 1;
     
     if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
+    if((fd_status = open("status_pipe", O_RDONLY, 0666)) == -1) perror("Open fifo");
+
     while(parser) {
         if((bytesread = read(STDIN_FILENO,userinput,sizeof(userinput))) == -1) perror("Userinput:");
         //passes the input  
@@ -107,9 +109,6 @@ int main() {
                         }
                     break;
                 case 2:
-                    if((fd_status = open("status_pipe", O_RDONLY, 0666)) == -1){
-                        perror("Open fifo");
-                    }
                     if ((bytes_written = write(fd, "status",7)) == -1) perror("FIFO Write:\n");
                     bzero(buffer, 256);
                     while ((bytesread = read(fd_status, buffer, sizeof(buffer))) > 0) {
