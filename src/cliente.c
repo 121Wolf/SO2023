@@ -67,7 +67,6 @@ int main() {
     int parser = 1;
     
     if((fd_status = open("status_pipe", O_RDONLY, 0666)) == -1) perror("Open fifo");
-    if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
 
     while(parser) {
         if((bytesread = read(STDIN_FILENO,userinput,sizeof(userinput))) == -1) perror("Userinput:");
@@ -96,18 +95,21 @@ int main() {
                             break;
                         default:
                             char * word = strtok(NULL," ");
+                            if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
                             logWrite(fd,pid,word);
+                            close(fd);
                             wait(&status);
+                            if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
                             logWrite(fd,pid,word);
-                            //if((bytes_written = write(fd, time+1,sizeof(struct timeval))) == -1){
-                            //    perror("FIFO Write:");
-                            //}
+                            close(fd);
                             _exit(0);
                             break;
                         }
                     break;
                 case 2:
+                    size_t i = 7;
                     if((fd = open(PIPE_NAME, O_WRONLY)) == -1) perror("FIFO\n");
+                    write(fd,&i,sizeof(size_t));
                     if ((bytes_written = write(fd, "status",7)) == -1) perror("FIFO Write:\n");
                     close(fd);
                     bzero(buffer, 256);
@@ -124,7 +126,6 @@ int main() {
             bzero(userinput,sizeof(userinput));
         }
     }
-    close(fd);
     // close the pipe 
     return 0;        
 }

@@ -66,7 +66,7 @@ void dataToString(pid_t activepids[], char* name[], struct timeval stop[], int s
 
 // Creates a new node in the linked list
 struct Node* createNode(pid_t pid, char *name,struct timeval time) {
-    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    struct Node* newNode = malloc(sizeof(struct Node));
     newNode->pid = pid;
     strncpy(newNode->name, name, sizeof(newNode->name) - 1); //n sei se está certo
     newNode->time = time;
@@ -76,7 +76,6 @@ struct Node* createNode(pid_t pid, char *name,struct timeval time) {
 
 void removeNode(struct Node* head, pid_t value) {
     if (head == NULL) {
-        printf("[DEBUG] List is empty");
         return;
     }
 
@@ -84,8 +83,7 @@ void removeNode(struct Node* head, pid_t value) {
     struct Node* previous = NULL;
 
     if(current != NULL && current->pid == value){
-        head = current->next;
-        free(current);
+        *head = *current->next;
         return;
     }
     while (current != NULL && current->pid != value) {
@@ -99,36 +97,38 @@ void removeNode(struct Node* head, pid_t value) {
     }
 }
 
-void insertAtBeginning(struct Node* head, pid_t pid, struct timeval time, char *name) {
-    struct Node* newNode = createNode(pid,name, time );
+struct Node * insertAtBeginning(struct Node* head, pid_t pid, struct timeval time, char *name) {
+    struct Node* newNode = createNode(pid,name, time);
     newNode->next = head;
-    head = newNode;
+    return newNode;
 }
 struct Node* pidIs(struct Node* head, pid_t pid){ //returns a node from linked list if the process is alreadty there. Returns null otherwise
      struct Node* temp = head;
      while (temp != NULL && temp->pid != pid)
         temp = temp->next;
 
-     if ( temp->pid == pid){
-            removeNode(head,pid);
-            return temp;
+    /*NULL -> pid*/
+    if (temp == NULL) {
+        return NULL;
+    }
+    else {
+        removeNode(head,pid);
+        return temp;
     } 
-        else return NULL;
 }
 
-int checkList(struct Node* head, pid_t pid,char *name, struct timeval tempo) {
+struct Node* checkList(struct Node* head, pid_t pid,char *name, struct timeval tempo) {
     struct Node* temp = head;
     while (temp != NULL && temp->pid != pid)
         temp = temp->next;
 
     if (temp == NULL) {
-        insertAtBeginning(head,pid,tempo,name);
-        return 0;
-        }
-    else if(temp->pid == pid){
+        return insertAtBeginning(head,pid,tempo,name);
+    }
+    else {
         removeNode(head,pid);
-        return 1;}
-        return 3;
+        return NULL;
+    }
 }
 
 char* longToString(long arg) {
