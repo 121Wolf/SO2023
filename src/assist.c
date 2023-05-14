@@ -129,3 +129,57 @@ int checkList(struct Node* head, pid_t pid,char *name, struct timeval tempo) {
         return 1;}
         return 3;
 }
+
+char* longToString(long arg) {
+    long exponential = 1;
+    int index = 0;
+    char* message = malloc(256 * sizeof(char));
+
+    // Alcança o exponencial de 10^N maior que pid
+    while (exponential < arg)
+        exponential *= 10;
+
+    // Torna o exponencial em 10^(N-1)
+    exponential /= 10;
+
+    
+    while (exponential != 0) {
+        message[index++] = (arg/exponential) + '0';
+        arg %= exponential;
+        exponential /= 10;
+    }
+
+    // Acaba a mensagem com '\0'
+    message[index] = '\0';
+
+    return message;
+}
+
+void writeStrings(int fileDesciptor, char** strings) {
+    int index = 0;
+    char *tmp;
+
+    while ((tmp = strings[index++]) != NULL) {
+        write(fileDesciptor, tmp, strlen(tmp) * sizeof(char));
+    }
+    write(fileDesciptor, "!", 1);
+}
+
+void time_format(struct timeval tv, char** logMessage) {
+    logMessage[10] = longToString(tv.tv_usec);
+    logMessage[8] = longToString(tv.tv_sec % 60);
+    logMessage[6] = longToString((tv.tv_sec / 60) % 60);
+    logMessage[4] = longToString((tv.tv_sec / 3600) % 24);
+    long hour = (tv.tv_sec / 3600); 
+    logMessage[2] = longToString(((hour / 24) % 365));
+    logMessage[0] = longToString(1970 + (hour / 8766));
+}
+
+void freeLogPointers (char** logMessage) {
+    free(logMessage[10]);
+    free(logMessage[8]);
+    free(logMessage[6]);
+    free(logMessage[4]);
+    free(logMessage[2]);
+    free(logMessage[0]);
+}

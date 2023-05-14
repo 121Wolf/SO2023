@@ -18,6 +18,14 @@ struct Node {
     struct Node* next;
 };
 
+char* longToString(long arg);
+
+void writeStrings(int fileDescriptor, char** strings);
+
+void time_format(struct timeval tv, char** logMessage);
+
+void freeLogPointers (char** logMessage);
+
 void dataToString(pid_t activepids[], char* name[], struct timeval stop[], int size, char* str);
 struct Node* pidIs(struct Node* head, pid_t pid);
 void insertAtBeginning(struct Node* head, pid_t pid,struct timeval time, char *name);
